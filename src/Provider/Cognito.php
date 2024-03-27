@@ -35,7 +35,7 @@ class Cognito extends AbstractProvider
      * @var string If set, it will replace default AWS Cognito urls.
      */
     protected $hostedDomain;
-    
+
     /**
      * @var string If set, it will be added to AWS Cognito urls.
      */
@@ -55,7 +55,7 @@ class Cognito extends AbstractProvider
     public function __construct($options = [], array $collaborators = [])
     {
         parent::__construct($options, $collaborators);
-        
+
         if (!empty($options['hostedDomain'])) {
             $this->hostedDomain = $options['hostedDomain'];
         } elseif (!empty($options['cognitoDomain']) && !empty($options['region'])) {
@@ -134,7 +134,7 @@ class Cognito extends AbstractProvider
      * @param $action
      * @return string
      */
-    private function getCognitoUrl($action)
+    public function getCognitoUrl($action)
     {
         return !empty($this->hostedDomain) ? $this->hostedDomain . $action :
             sprintf(self::BASE_COGNITO_URL, $this->cognitoDomain, $this->region, $action);
@@ -200,6 +200,25 @@ class Cognito extends AbstractProvider
     }
 
     /**
+     * @param string $logout_uri
+     * @return string
+     */
+    public function getLogoutUrl(string $logout_uri)
+    {
+
+        $params = [
+            'client_id'     => $this->clientId,
+            'logout_uri'  => $logout_uri,
+            'response_type' => 'code'
+        ];
+
+        $logoutUri = $this->getCognitoUrl('/logout');
+
+        return $logoutUri."?".http_build_query($params);
+
+    }
+
+    /**
      * @param ResponseInterface $response
      * @param array|string $data
      * @throws IdentityProviderException
@@ -209,10 +228,10 @@ class Cognito extends AbstractProvider
         if (empty($data['error'])) {
             return;
         }
-        
+
         $code = 0;
         $error = $data['error'];
-        
+
         throw new IdentityProviderException($error, $code, $data);
     }
 
